@@ -94,12 +94,17 @@ class NpzDeserializer(serializer.Deserializer):
     def __call__(self, key, value):
         key = key.lstrip('/')
         dataset = self.npz[self.path + key]
-        if isinstance(value, numpy.ndarray):
-            numpy.copyto(value, dataset)
-        elif isinstance(value, cuda.ndarray):
-            value.set(numpy.asarray(dataset))
-        else:
-            value = type(value)(numpy.asarray(dataset))
+        try:
+            if isinstance(value, numpy.ndarray):
+                numpy.copyto(value, dataset)
+            elif isinstance(value, cuda.ndarray):
+                value.set(numpy.asarray(dataset))
+            else:
+                value = type(value)(numpy.asarray(dataset))
+        except ValueError as e:
+            print("\033[91mATTENTION: Could not load data from model file!\033[0m")
+            print("Path: {}".format(self.path + key))
+            print("Reason: ", e)
         return value
 
 
